@@ -81,7 +81,3 @@ Existing implementations:
 - Salesforce Einstein: https://www.salesforce.com/products/einstein/overview/ - AI layer within Salesforce for personalization, predictions, and recommendations.
 - Dynamic Yield: https://www.dynamicyield.com/ - Personalization and decisioning platform for web, mobile, email, and kiosks.
 - Klaviyo (AI features): https://www.klaviyo.com/ - Email and SMS marketing automation with AI-driven segmentation and recommendations.
-
----
-
-Notes on use: adapt each section to your organization's industry, data availability and regulatory constraints. If you want, I can: (1) shorten or expand specific use cases, (2) add diagrams or templates for requirement gathering for selected cases, or (3) create issues/epics in this repository to begin implementing a chosen use case.
