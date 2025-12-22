@@ -4,9 +4,7 @@ The following two metrics were selected as the most valuable for the RAG subsyst
 
 ### Answer Found Rate (AFR)
 
-\[
-AFR = \frac{\text{Number of questions with valid answers}}{\text{Total number of questions}}
-\]
+AFR = Number of questions with valid answers/Total number of questions
 
 An answer is considered valid if the model does not return the fallback phrase:  
 **"The provided context does not contain the answer to this question."**
