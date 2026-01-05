@@ -127,4 +127,4 @@ project/
 
 
 The full implementation and evaluation code are available in the project repository:
-[https://github.com/](#)
+[https://github.com/Tomiris95/epam_train/blob/main/Module5/project](#)
