@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1770030787961" clover="3.2.0">
+  <project timestamp="1770030787962" name="All files">
+    <metrics statements="31" coveredstatements="31" conditionals="33" coveredconditionals="33" methods="5" coveredmethods="5" elements="69" coveredelements="69" complexity="0" loc="31" ncloc="31" packages="1" files="1" classes="1"/>
+    <file name="validation.js" path="C:\Users\tomir\Desktop\EPAM\epam_train\Module7\Practical_task1\PT2\validation.js">
+      <metrics statements="31" coveredstatements="31" conditionals="33" coveredconditionals="33" methods="5" coveredmethods="5"/>
+      <line num="6" count="1" type="stmt"/>
+      <line num="31" count="5" type="stmt"/>
+      <line num="32" count="5" type="cond" truecount="5" falsecount="0"/>
+      <line num="33" count="1" type="stmt"/>
+      <line num="34" count="1" type="stmt"/>
+      <line num="37" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="38" count="2" type="stmt"/>
+      <line num="41" count="4" type="stmt"/>
+      <line num="45" count="7" type="stmt"/>
+      <line num="46" count="7" type="cond" truecount="4" falsecount="0"/>
+      <line num="48" count="7" type="cond" truecount="2" falsecount="0"/>
+      <line num="49" count="1" type="stmt"/>
+      <line num="50" count="1" type="stmt"/>
+      <line num="53" count="6" type="cond" truecount="2" falsecount="0"/>
+      <line num="54" count="6" type="cond" truecount="2" falsecount="0"/>
+      <line num="55" count="6" type="cond" truecount="2" falsecount="0"/>
+      <line num="57" count="6" type="stmt"/>
+      <line num="61" count="5" type="stmt"/>
+      <line num="62" count="5" type="cond" truecount="5" falsecount="0"/>
+      <line num="63" count="1" type="stmt"/>
+      <line num="64" count="1" type="stmt"/>
+      <line num="68" count="4" type="stmt"/>
+      <line num="69" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="70" count="1" type="stmt"/>
+      <line num="73" count="4" type="stmt"/>
+      <line num="77" count="2" type="stmt"/>
+      <line num="83" count="2" type="cond" truecount="3" falsecount="0"/>
+      <line num="84" count="2" type="stmt"/>
+      <line num="85" count="6" type="stmt"/>
+      <line num="87" count="2" type="stmt"/>
+      <line num="90" count="1" type="stmt"/>
+    </file>
+  </project>
+</coverage>
