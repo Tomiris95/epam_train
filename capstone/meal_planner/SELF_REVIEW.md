@@ -43,7 +43,7 @@ Replace the subprocess MCP server with a managed vector store (Qdrant or Weaviat
 Use FAISS in-process with `paraphrase-multilingual-MiniLM-L12-v2` embeddings instead of a cloud vector database or English-only model.
 
 ### Rationale
-The recipe corpus is bilingual: 224 Russian recipes from the Стол №5 cookbook plus English Spoonacular recipes. An English-only model (`all-MiniLM-L6-v2`, the original choice) failed to match "ужин" (dinner) and "курица" (chicken) to English queries. The multilingual model handles cross-lingual similarity significantly better. FAISS in-process eliminates infrastructure cost for a local demo.
+The recipe corpus is bilingual: 124 Russian recipes from the Стол №5 cookbook plus English Spoonacular recipes. An English-only model (`all-MiniLM-L6-v2`, the original choice) failed to match "ужин" (dinner) and "курица" (chicken) to English queries. The multilingual model handles cross-lingual similarity significantly better. FAISS in-process eliminates infrastructure cost for a local demo.
 
 ### Trade-off accepted
 Even the multilingual model has gaps: "fish" does not reliably map to "лосось" (salmon) or "треска" (cod) in the embedding space. This was partially resolved by enriching the indexed text with English category hints (`fish salmon seafood`) derived from Russian ingredient names at index build time. A full fix would require query translation to Russian before embedding.
