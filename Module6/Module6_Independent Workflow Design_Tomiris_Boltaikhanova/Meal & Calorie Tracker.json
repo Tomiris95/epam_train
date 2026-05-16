@@ -1,0 +1,1259 @@
+{
+  "name": "Meal & Calorie Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -432,
+        48
+      ],
+      "id": "629d9e2b-d35e-4329-95a6-eaeedf2327b6",
+      "name": "Telegram Trigger",
+      "webhookId": "433b5d72-6046-4902-90f6-69ad356460c8",
+      "credentials": {
+        "telegramApi": {
+          "id": "qUbSEtseauPysoJH",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a nutrition assistant.\n\nYour task is to estimate calories from a meal description.\n\nRules:\n- Assume normal portion sizes\n- Provide a realistic estimate\n- Do NOT add explanations outside JSON\n- Always return valid JSON"
+            },
+            {
+              "content": "=Estimate calories for the following meal:\n\n{{ $json.text }}\n\nReturn ONLY JSON in this format:\n{\n  \"username_id\": {{ $json.username_id }} ,\n  \"username\": {{ $json.username }},\n  \"text\": {{ $json.text }},\n  \"items\": [],\n  \"calories\": 0\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 200,
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "schema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"username_id\": { \"type\": \"number\" },\n    \"username\": { \"type\": \"string\" },\n    \"text\":{\"type\":\"string\"},\n    \"items\": { \n      \"type\": \"array\", \n      \"items\": { \"type\": \"string\" } \n    },\n    \"calories\": { \"type\": \"number\" }\n  },\n  \"required\": [\"username_id\", \"username\", \"text\", \"items\", \"calories\"],\n  \"additionalProperties\": false\n}\n\n"
+            }
+          },
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        -64
+      ],
+      "id": "3e033887-fcb4-4ad7-a957-d4f89027caef",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "C70cAOTlb5FvIcK0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"username_id\": {{ $json.message.chat.id }},\n  \"username\": \"{{ $json.message.chat.username }}\",\n  \"text\": \"{{ $json.message.text }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        -64
+      ],
+      "id": "d9a22274-7ed2-4099-b0dd-e47b11ea0514",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Code in JavaScript1').item.json.user_id }}",
+        "text": "=🍽 Meal logged successfully!\n📝 Items: {{ $('Code in JavaScript1').item.json.items }}\n🔥 Calories for this meal: {{ $('Code in JavaScript1').item.json.calories }}kcal\n🎯 Daily goal: {{ $('Code in JavaScript1').item.json.calorie_goal }} kcal \n✅ Remaining calories today: {{ $('Code in JavaScript1').item.json.remaining_calories }} kcal  Keep going! 💪",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        -64
+      ],
+      "id": "4dcbd162-2720-4b5b-afdd-d6f33595afd7",
+      "name": "Send a text message",
+      "webhookId": "f00da590-94f8-46e8-ba04-04149023b25a",
+      "credentials": {
+        "telegramApi": {
+          "id": "qUbSEtseauPysoJH",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs",
+          "mode": "list",
+          "cachedResultName": "Meal & Calorie Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "timestep",
+              "lookupValue": "={{ $now.setZone('Asia/Almaty').toFormat('yyyy-MM-dd') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        112
+      ],
+      "id": "db6bda0f-c82e-4bf7-ad9c-d7db4cc93d5e",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "gZgIlg5AK5e8Oltg",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a professional nutritionist.\nCalculate total calories for all meals combined.\nEstimate total Proteins, Fats, and Carbohydrates for the entire day.\""
+            },
+            {
+              "content": "=Below is a list of ALL meals consumed by the user today. Please sum these up and provide one single analysis for the entire day\n\nMeals:\n{{ $json.meal_items }}\n{{ $json.meal_calories }}\n\nEach object in the array has these fields:\n- meal_items: array of strings, food items in the meal\n- meal_calories: number, calories in the meal\n\nTasks:\n1. Calculate total calories for all meals combined.\n2. Estimate total Proteins (g), Fats (g), and Carbohydrates (g).\n3. Assess the balance of the diet.\n4. Provide 3 clear suggestions to improve nutrition.\n\nReturn ONLY JSON in this format:\n\n{\n  \"total_calories\": 0,\n  \"proteins_g\": 0,\n  \"fats_g\": 0,\n  \"carbs_g\": 0,\n  \"analysis\": \"\",\n  \"suggestions\": []\n}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 300,
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "schema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"total_calories\": { \"type\": \"number\" },\n    \"proteins_g\": { \"type\": \"number\" },\n    \"fats_g\": { \"type\": \"number\" },\n    \"carbs_g\": { \"type\": \"number\" },\n    \"analysis\": { \"type\": \"string\" },\n    \"suggestions\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" }\n    }\n  },\n  \"required\": [\n    \"total_calories\",\n    \"proteins_g\",\n    \"fats_g\",\n    \"carbs_g\",\n    \"analysis\",\n    \"suggestions\"\n  ],\n  \"additionalProperties\": false\n}\n",
+              "strict": true
+            }
+          },
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        112
+      ],
+      "id": "cb9973b6-a6c8-4e10-a250-8d00861d1edc",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "C70cAOTlb5FvIcK0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=📊 Daily Nutrition Summary  \n🔥 Calories: {{ $json.output[0].content[0].text.total_calories }} kcal  \n🥩 Proteins: {{ $json.output[0].content[0].text.proteins_g }} g \n🥑 Fats: {{ $json.output[0].content[0].text.fats_g }} g\n🍞 Carbs: {{ $json.output[0].content[0].text.carbs_g }} g\n🧠 Analysis: {{ $json.output[0].content[0].text.analysis }} \n✅ Suggestions: {{ $json.output[0].content[0].text.suggestions }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        112
+      ],
+      "id": "6797c1b9-f565-4b33-bda1-956b5997424b",
+      "name": "Send a text message1",
+      "webhookId": "6e851d4f-3288-475b-a21f-42a90cf26fa6",
+      "credentials": {
+        "telegramApi": {
+          "id": "qUbSEtseauPysoJH",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst dailyGoal = 1800;\n\nconst newCalories = $input.last().json.meal_calories || 0;\n\nlet remainingCalories;\n\n// Если найдена только 1 строка ИЛИ вообще ничего не найдено\n// (Значит, эта единственная строка — та, что мы только что добавили)\nif (items.length <= 1) {\n  remainingCalories = dailyGoal - newCalories;\n} else {\n  // Берем предпоследнюю строку (индекс length - 2), \n  // так как последняя (length - 1) — это текущий прием пищи\n  const previousEntry = items[items.length - 2].json;\n  const lastRemaining = Number(previousEntry.remaining_calories) || dailyGoal;\n  remainingCalories = lastRemaining - newCalories;\n}\n\nreturn [{\n  json: {\n    user_id: $input.last().json.user_id ,\n    username: $input.last().json.user_name,\n    items: $input.last().json.meal_items,\n    calories: newCalories,\n    calorie_goal: dailyGoal,\n    remaining_calories: remainingCalories,\n    // Передаем номер текущей строки для обновления\n    row_number: items[items.length - 1].json.row_number \n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -64
+      ],
+      "id": "a71fb6ef-d539-41c1-b93e-4211bfcdd4c5",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs",
+          "mode": "list",
+          "cachedResultName": "Meal & Calorie Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "timestep",
+              "lookupValue": "={{ $now.setZone('Asia/Almaty').toFormat('yyyy-MM-dd') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        752,
+        -64
+      ],
+      "id": "6e9b73a4-d967-4792-8986-516f755fd227",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleApi": {
+          "id": "gZgIlg5AK5e8Oltg",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs",
+          "mode": "list",
+          "cachedResultName": "Meal & Calorie Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_name": "={{ $json.output[0].content[0].text.username }}",
+            "user_id": "={{ $json.output[0].content[0].text.username_id }}",
+            "user_text": "={{ $json.output[0].content[0].text.text }}",
+            "meal_calories": "={{ $json.output[0].content[0].text.calories }}",
+            "meal_items": "={{ $json.output[0].content[0].text.items }}",
+            "timestep": "={{ $now.setZone('Asia/Almaty').toFormat('yyyy-MM-dd') }}",
+            "calorie_goal": "1800"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestep",
+              "displayName": "timestep",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "calorie_goal",
+              "displayName": "calorie_goal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "meal_items",
+              "displayName": "meal_items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "meal_calories",
+              "displayName": "meal_calories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_text",
+              "displayName": "user_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remaining_calories",
+              "displayName": "remaining_calories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        -64
+      ],
+      "id": "9279ade3-5805-4d8e-a637-7a95d132d322",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleApi": {
+          "id": "gZgIlg5AK5e8Oltg",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs",
+          "mode": "list",
+          "cachedResultName": "Meal & Calorie Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "remaining_calories": "={{ $json.remaining_calories }}",
+            "row_number": "={{Number($json.row_number)}}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "timestep",
+              "displayName": "timestep",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "calorie_goal",
+              "displayName": "calorie_goal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "meal_items",
+              "displayName": "meal_items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "meal_calories",
+              "displayName": "meal_calories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user_text",
+              "displayName": "user_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "remaining_calories",
+              "displayName": "remaining_calories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -64
+      ],
+      "id": "43ce5251-2163-47bc-b145-c3dcd122e28f",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "gZgIlg5AK5e8Oltg",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "meal_items"
+            },
+            {
+              "fieldToAggregate": "meal_calories"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        272,
+        112
+      ],
+      "id": "0d9e44d2-a560-4560-8dc2-889e46b7d3db",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ !!$json.message.photo }}",
+                    "rightValue": "/summary",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "c051c47f-904f-48f3-b263-fa10d6a187cd"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a89d95c9-65b0-4456-9187-255b5abf6c0b",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notStartsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bd0b0853-ee87-4b4b-8167-41174d1bc57c",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/summary",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d26d556a-51e1-4dd7-bb76-3c6f7e393d49",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/weekly",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -192,
+        16
+      ],
+      "id": "043ea02b-2fb7-43f5-8894-dff7f421f2c1",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs",
+          "mode": "list",
+          "cachedResultName": "Meal & Calorie Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "timestep",
+              "lookupValue": "={{ $now.setZone('Asia/Almaty').toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "lookupColumn": "timestep",
+              "lookupValue": "={{ $now.setZone('Asia/Almaty').minus({ days: 6 }).toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "lookupColumn": "timestep",
+              "lookupValue": "={{ $now.setZone('Asia/Almaty').minus({ days: 5 }).toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "lookupColumn": "timestep",
+              "lookupValue": "={{ $now.setZone('Asia/Almaty').minus({ days: 4 }).toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "lookupColumn": "timestep",
+              "lookupValue": "={{ $now.setZone('Asia/Almaty').minus({ days: 3 }).toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "lookupColumn": "timestep",
+              "lookupValue": "={{ $now.setZone('Asia/Almaty').minus({ days: 2 }).toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "lookupColumn": "timestep",
+              "lookupValue": "={{ $now.setZone('Asia/Almaty').minus({ days: 1 }).toFormat('yyyy-MM-dd') }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        304
+      ],
+      "id": "46fa5753-95a3-492d-ba4e-d9e3e649d570",
+      "name": "Get row(s) in sheet2",
+      "credentials": {
+        "googleApi": {
+          "id": "gZgIlg5AK5e8Oltg",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "meal_items"
+            },
+            {
+              "fieldToAggregate": "meal_calories"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        272,
+        304
+      ],
+      "id": "8b2679e4-58e7-4981-8394-38186e6316ae",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a professional nutritionist.\nCalculate total calories for all meals combined."
+            },
+            {
+              "content": "=Below is a list of ALL meals consumed by the user for the last 7 days. Please sum these up and provide one single analysis for the entire day\n\nMeals:\n{{ $json.meal_items }}\n{{ $json.meal_calories }}\n\nEach object in the array has these fields:\n- meal_items: array of strings, food items in the meal\n- meal_calories: number, calories in the meal\n\nTasks:\n1. Calculate total calories for all meals combined.\n2. Estimate total Proteins (g), Fats (g), and Carbohydrates (g).\n3. Assess the balance of the diet.\n4. Provide 3 clear suggestions to improve nutrition.\n\nReturn ONLY JSON in this format:\n\n{\n  \"total_calories\": 0,\n  \"proteins_g\": 0,\n  \"fats_g\": 0,\n  \"carbs_g\": 0,\n  \"analysis\": \"\",\n  \"suggestions\": []\n}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 300,
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "schema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"total_calories\": { \"type\": \"number\" },\n    \"proteins_g\": { \"type\": \"number\" },\n    \"fats_g\": { \"type\": \"number\" },\n    \"carbs_g\": { \"type\": \"number\" },\n    \"analysis\": { \"type\": \"string\" },\n    \"suggestions\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" }\n    }\n  },\n  \"required\": [\n    \"total_calories\",\n    \"proteins_g\",\n    \"fats_g\",\n    \"carbs_g\",\n    \"analysis\",\n    \"suggestions\"\n  ],\n  \"additionalProperties\": false\n}\n",
+              "strict": true
+            }
+          },
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        304
+      ],
+      "id": "df7a830f-1c43-4664-aa37-2d879882064e",
+      "name": "Message a model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "C70cAOTlb5FvIcK0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=📊 Weekly Nutrition Summary  \n🔥 Calories: {{ $json.output[0].content[0].text.total_calories }} kcal  \n🥩 Proteins: {{ $json.output[0].content[0].text.proteins_g }} g \n🥑 Fats: {{ $json.output[0].content[0].text.fats_g }} g\n🍞 Carbs: {{ $json.output[0].content[0].text.carbs_g }} g\n🧠 Analysis: {{ $json.output[0].content[0].text.analysis }} \n✅ Suggestions: {{ $json.output[0].content[0].text.suggestions }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        304
+      ],
+      "id": "faf52887-9ce7-4bca-8a45-d9ffd06a7b51",
+      "name": "Send a text message2",
+      "webhookId": "6e851d4f-3288-475b-a21f-42a90cf26fa6",
+      "credentials": {
+        "telegramApi": {
+          "id": "qUbSEtseauPysoJH",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[0].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        -224
+      ],
+      "id": "c639a5eb-aaab-4c81-9bf7-8c8b62b32f4c",
+      "name": "Get a file",
+      "webhookId": "9fa0a3dd-7e21-42b7-ac9b-47b67056e27a",
+      "credentials": {
+        "telegramApi": {
+          "id": "qUbSEtseauPysoJH",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Analyze this food image. Estimate the portion size and total calories.\nReturn ONLY a JSON object in this format:\n{\n  \"username_id\": \"{{ $node[\"Telegram Trigger\"].json.message.from.id }}\",\n  \"username\": \"{{ $node[\"Telegram Trigger\"].json.message.from.first_name }}\",\n  \"text\": \"{{ $node[\"Telegram Trigger\"].json.message.caption || \"Photo submission\" }}\",\n  \"items\": [\"list\", \"of\", \"detected\", \"items\"],\n  \"calories\": 0\n}",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        -224
+      ],
+      "id": "2294c8f2-b6f9-476e-a210-13b815d98edc",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "C70cAOTlb5FvIcK0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Берем входящий текст\nlet rawData = $input.first().json.output[0].content[0].text;\n\ntry {\n  // 2. Очищаем от ```json ... ``` и лишних пробелов\n  const cleanJson = rawData\n    .replace(/```json/g, \"\") // Удаляем открывающие кавычки\n    .replace(/```/g, \"\")     // Удаляем закрывающие кавычки\n    .trim();                 // Убираем пробелы в начале и конце\n\n  // 3. Превращаем очищенную строку в настоящий объект (словарь)\n  const parsedData = JSON.parse(cleanJson);\n\n  // 4. Возвращаем результат в n8n\n  return {\n    calories: parsedData.calories,\n    items: parsedData.items,\n    username_id:$('Switch').first().json.message.from.id ,\n    username: $('Switch').first().json.message.from.username,\n    text: \"Photo submission\"\n  };\n} catch (e) {\n  // Если что-то пошло не так, выводим ошибку для отладки\n  return {\n    error: \"Parsing failed\",\n    message: e.message,\n    received_text: rawData\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -224
+      ],
+      "id": "f0ea7d90-1820-403d-9e01-d89563439090",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs",
+          "mode": "list",
+          "cachedResultName": "Meal & Calorie Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvMJgcLnMvjEb1NmF-EKZ_qaYgJ1kchA33D9KTOpJMs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_name": "={{ $json.username }}",
+            "user_id": "={{ $json.username_id }}",
+            "user_text": "={{ $json.text }}",
+            "meal_calories": "={{ $json.calories }}",
+            "meal_items": "={{ $json.items }}",
+            "timestep": "={{ $now.setZone('Asia/Almaty').toFormat('yyyy-MM-dd') }}",
+            "calorie_goal": "1800"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_name",
+              "displayName": "user_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestep",
+              "displayName": "timestep",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "calorie_goal",
+              "displayName": "calorie_goal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "meal_items",
+              "displayName": "meal_items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "meal_calories",
+              "displayName": "meal_calories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_text",
+              "displayName": "user_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remaining_calories",
+              "displayName": "remaining_calories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        -224
+      ],
+      "id": "3b470376-2e56-47aa-9746-5d7a974ab9c6",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "gZgIlg5AK5e8Oltg",
+          "name": "Google Service Account account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Message a model2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b84a1d3c-dbb3-49aa-96b9-59e003cdfa82",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8be8208df9223db407b65e6526b8d47cb715a55442af877330baa5c920c3a424"
+  },
+  "id": "FRcLH5Iu9IzJole2ebPoA",
+  "tags": []
+}

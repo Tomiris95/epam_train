@@ -1,0 +1,4 @@
+Email: tomiris_boltaikhanova@epam.com
+Topic: Recipe Recommendation System
+Repo URL: https://github.com/Tomiris95/epam_train/tree/main/capstone/meal_planner
+Video URL: https://youtu.be/RlqqvOOeq0Y

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd 'c:\\\\Users\\\\tomir\\\\OneDrive\\\\Desktop\\\\EPAM\\\\capstone_meal_planner\\\\meal_planner_2.0\\\\meal_planner'; Get-ChildItem -Recurse -Force | Select-Object FullName | ForEach-Object { $_.FullName.Substring\\(\\(Get-Location\\).Path.Length + 1\\) } | Sort-Object)"
+    ]
+  }
+}

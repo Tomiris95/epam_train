@@ -163,8 +163,7 @@ meal_planner/
 ├── rag_eval.py                       # RAG precision/recall evaluation
 ├── clear_spoonacular.py              # Remove Spoonacular recipes before re-seeding
 ├── spoonacular_seed.py               # Seed from Spoonacular API
-├── ARCHITECTURE.md                   # Full system architecture blueprint
-├── NFR_ASSESSMENT.md                 # Non-functional requirements assessment
+├── BLUEPRINT.md                   # Full system architecture blueprint
 ├── .env.example                      # Env variable template (safe to commit)
 ├── .gitignore
 └── requirements.txt
