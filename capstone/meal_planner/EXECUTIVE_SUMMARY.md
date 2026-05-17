@@ -17,7 +17,7 @@ A **production-grade multi-agent AI system** with a Streamlit web interface and 
 3. **Planner Agent** — selects the optimal breakfast/lunch/dinner combination, scores recipes by fridge overlap, and validates calorie targets (±100 kcal tolerance) for every family member
 4. **Conversational Agent** — allows natural-language plan adjustments via GPT-4o with function calling ("replace dinner with something with salmon")
 
-The system stores 124 Russian recipes from a certified medical diet cookbook (*Стол №5*) and supplements them with 69 English recipes from the Spoonacular API. All recipe search runs locally via FAISS with no cloud vector database.
+The system stores 124 Russian recipes from a certified medical diet cookbook (*Стол №5*) and supplements them with 152 English recipes from the Spoonacular API. All recipe search runs locally via FAISS with no cloud vector database.
 
 ---
 

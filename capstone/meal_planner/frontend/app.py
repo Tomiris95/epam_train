@@ -54,6 +54,41 @@ for key in ["family_id", "plan_id", "plan_data", "shopping_list", "token", "user
     if key not in st.session_state:
         st.session_state[key] = None
 
+# ─── Tag constants & mutual-exclusivity callbacks ────────────────────────────
+_PREFERRED_TAGS = ["vegetarian", "vegan", "gluten_free", "dairy_free", "no_red_meat",
+                   "high_protein", "low_spice", "soft_food", "high_fiber", "toddler", "halal"]
+_FORBIDDEN_TAGS = ["vegetarian", "vegan", "no_red_meat", "gluten_free", "dairy_free"]
+
+
+def _on_stol5_checked():
+    if st.session_state.get("a_stol5"):
+        for t in _PREFERRED_TAGS:
+            st.session_state[f"a_{t}"] = False
+        for t in _FORBIDDEN_TAGS:
+            st.session_state[f"f_{t}"] = False
+
+
+def _on_other_tag_checked():
+    any_other = any(st.session_state.get(f"a_{t}") for t in _PREFERRED_TAGS)
+    any_forbidden = any(st.session_state.get(f"f_{t}") for t in _FORBIDDEN_TAGS)
+    if any_other or any_forbidden:
+        st.session_state["a_stol5"] = False
+
+
+def _on_edit_stol5_checked(mid):
+    if st.session_state.get(f"edit_a_{mid}_stol5"):
+        for t in _PREFERRED_TAGS:
+            st.session_state[f"edit_a_{mid}_{t}"] = False
+        for t in _FORBIDDEN_TAGS:
+            st.session_state[f"edit_f_{mid}_{t}"] = False
+
+
+def _on_edit_other_checked(mid):
+    any_other = any(st.session_state.get(f"edit_a_{mid}_{t}") for t in _PREFERRED_TAGS)
+    any_forbidden = any(st.session_state.get(f"edit_f_{mid}_{t}") for t in _FORBIDDEN_TAGS)
+    if any_other or any_forbidden:
+        st.session_state[f"edit_a_{mid}_stol5"] = False
+
 
 # ─── Helper Functions ────────────────────────────────────────────────────────
 def _auth_headers() -> dict:
@@ -63,7 +98,10 @@ def _auth_headers() -> dict:
 
 def _extract_error(r) -> str:
     try:
-        return r.json().get("detail", r.text) or f"HTTP {r.status_code}"
+        detail = r.json().get("detail", r.text)
+        if isinstance(detail, list):
+            return "; ".join(item.get("msg", str(item)) for item in detail)
+        return detail or f"HTTP {r.status_code}"
     except Exception:
         return r.text or f"HTTP {r.status_code}"
 
@@ -160,7 +198,7 @@ def show_auth_page():
                         st.session_state.username = username
                         st.rerun()
                     else:
-                        st.error(r.json().get("detail", "Invalid credentials."))
+                        st.error(_extract_error(r))
                 except Exception as e:
                     st.error(f"Could not connect to server: {e}")
 
@@ -189,7 +227,7 @@ def show_auth_page():
                     if r.status_code == 201:
                         st.success("Account created! Please log in.")
                     else:
-                        st.error(r.json().get("detail", "Registration failed."))
+                        st.error(_extract_error(r))
                 except Exception as e:
                     st.error(f"Could not connect to server: {e}")
 
@@ -289,14 +327,17 @@ if page == "🏠 Setup Family":
             col_a, col_b = st.columns(2)
             with col_a:
                 st.caption("✅ Preferred")
-                st.checkbox("stol5 (traditional menu)", key="a_stol5", disabled=stol5_disabled)
+                st.checkbox("stol5 (traditional menu)", key="a_stol5",
+                            disabled=stol5_disabled, on_change=_on_stol5_checked)
                 st.divider()
                 for t in PREFERRED_TAGS:
-                    st.checkbox(t, key=f"a_{t}", disabled=stol5_on)
+                    st.checkbox(t, key=f"a_{t}", disabled=stol5_on,
+                                on_change=_on_other_tag_checked)
             with col_b:
                 st.caption("🚫 Forbidden")
                 for t in FORBIDDEN_TAGS:
-                    st.checkbox(t, key=f"f_{t}", disabled=stol5_on)
+                    st.checkbox(t, key=f"f_{t}", disabled=stol5_on,
+                                on_change=_on_other_tag_checked)
 
             if stol5_on:
                 allowed_sel = ["stol5"]
@@ -346,6 +387,8 @@ if page == "🏠 Setup Family":
 
     with col2:
         st.markdown('<div class="section-header"><h3>Existing Families</h3></div>', unsafe_allow_html=True)
+        if not families:
+            st.info("No families yet — create one on the left to get started.")
         for fam in (families or []):
             with st.expander(f"🏠 {fam['name']} ({len(fam['members'])} members)"):
                 for member in fam["members"]:
@@ -398,14 +441,17 @@ if page == "🏠 Setup Family":
                         with ec1:
                             st.caption("✅ Preferred")
                             st.checkbox("stol5 (traditional menu)", key=f"edit_a_{mid}_stol5",
-                                        disabled=any_other_e or any_forbidden_e)
+                                        disabled=any_other_e or any_forbidden_e,
+                                        on_change=_on_edit_stol5_checked, args=(mid,))
                             st.divider()
                             for t in PREFERRED_TAGS:
-                                st.checkbox(t, key=f"edit_a_{mid}_{t}", disabled=stol5_on_e)
+                                st.checkbox(t, key=f"edit_a_{mid}_{t}", disabled=stol5_on_e,
+                                            on_change=_on_edit_other_checked, args=(mid,))
                         with ec2:
                             st.caption("🚫 Forbidden")
                             for t in FORBIDDEN_TAGS:
-                                st.checkbox(t, key=f"edit_f_{mid}_{t}", disabled=stol5_on_e)
+                                st.checkbox(t, key=f"edit_f_{mid}_{t}", disabled=stol5_on_e,
+                                            on_change=_on_edit_other_checked, args=(mid,))
 
                         if st.button("💾 Save Changes", key=f"save_{mid}", type="primary"):
                             if stol5_on_e:
@@ -432,8 +478,19 @@ if page == "🏠 Setup Family":
                     st.divider()
 
                 if st.button("🗑️ Delete Family", key=f"del_{fam['id']}"):
-                    api_delete(f"/families/{fam['id']}")
-                    st.rerun()
+                    st.session_state[f"confirm_del_{fam['id']}"] = True
+                if st.session_state.get(f"confirm_del_{fam['id']}"):
+                    st.warning("Delete this family and all its data?")
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        if st.button("Yes, delete", key=f"yes_del_{fam['id']}", type="primary"):
+                            api_delete(f"/families/{fam['id']}")
+                            st.session_state.pop(f"confirm_del_{fam['id']}", None)
+                            st.rerun()
+                    with c2:
+                        if st.button("Cancel", key=f"no_del_{fam['id']}"):
+                            st.session_state.pop(f"confirm_del_{fam['id']}", None)
+                            st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -478,8 +535,19 @@ elif page == "🥦 Manage Fridge":
                 st.rerun()
 
         if st.button("🗑️ Clear Fridge", use_container_width=True):
-            api_delete(f"/fridge/{fam_id}")
-            st.rerun()
+            st.session_state["confirm_clear_fridge"] = True
+        if st.session_state.get("confirm_clear_fridge"):
+            st.warning("Remove all items from the fridge?")
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("Yes, clear", key="yes_clear_fridge", type="primary"):
+                    api_delete(f"/fridge/{fam_id}")
+                    st.session_state.pop("confirm_clear_fridge", None)
+                    st.rerun()
+            with c2:
+                if st.button("Cancel", key="no_clear_fridge"):
+                    st.session_state.pop("confirm_clear_fridge", None)
+                    st.rerun()
 
     with col2:
         st.markdown('<div class="section-header"><h3>Current Fridge Contents</h3></div>', unsafe_allow_html=True)
@@ -499,7 +567,7 @@ elif page == "🥦 Manage Fridge":
             for item in items:
                 c1, c2 = st.columns([5, 1])
                 with c1:
-                    st.text(item["ingredient"])
+                    st.markdown(item["ingredient"].replace("_", " ").title())
                 with c2:
                     if st.button("✕", key=f"fi_{item['id']}"):
                         api_delete(f"/fridge/{fam_id}/{item['id']}")
@@ -533,6 +601,7 @@ elif page == "📅 Generate Plan":
                     st.session_state.plan_data = result
                     st.session_state.plan_id = result["plan"]["id"]
                     st.session_state.shopping_list = None
+                    st.session_state.chat_history = []
                     st.success("✅ Plan generated!")
 
     # ─── Display Plan ─────────────────────────────────────────────────────────
@@ -571,6 +640,10 @@ elif page == "📅 Generate Plan":
                 continue
             recipe = item["recipe"]
             cal = get_recipe_calories(recipe)
+            portion = recipe["base_portion_grams"]
+            protein = round((portion / 100) * recipe.get("protein_per_100g", 0), 1)
+            fat     = round((portion / 100) * recipe.get("fat_per_100g", 0), 1)
+            carbs   = round((portion / 100) * recipe.get("carbs_per_100g", 0), 1)
             tags_html = render_tags(recipe["tags"])
             ings = ", ".join(i["name"] for i in recipe["ingredients"][:5])
             source = recipe.get("source", "local")
@@ -582,10 +655,11 @@ elif page == "📅 Generate Plan":
                 <h3>{MEAL_ICONS[meal_type]} {MEAL_LABELS[meal_type]}</h3>
                 <div class="recipe-name">{recipe['name']}</div>
                 <div class="meta">
-                    📊 {cal} kcal/base portion &nbsp;|&nbsp;
+                    📊 {cal:.1f} kcal/base portion &nbsp;|&nbsp;
                     ⚖️ {recipe['base_portion_grams']}g base &nbsp;|&nbsp;
                     🔥 {recipe['calories_per_100g']} kcal/100g
                 </div>
+                <div class="meta">🥩 {protein}g protein &nbsp;|&nbsp; 🧈 {fat}g fat &nbsp;|&nbsp; 🍞 {carbs}g carbs</div>
                 <div class="meta">🧂 {ings}{'...' if len(recipe['ingredients']) > 5 else ''}</div>
                 <div class="meta" style="margin-top:6px;">
                     <span style="color:{source_color}; font-size:0.8rem;">{source_label}</span>
@@ -764,10 +838,21 @@ elif page == "📅 Generate Plan":
                         st.rerun()
             with col_del:
                 if st.button("🗑️ Discard Plan", use_container_width=True):
-                    api_delete(f"/meal-plans/{plan['id']}")
-                    st.session_state.plan_data = None
-                    st.session_state.plan_id = None
-                    st.rerun()
+                    st.session_state["confirm_discard_plan"] = True
+            if st.session_state.get("confirm_discard_plan"):
+                st.warning("Discard this plan? This cannot be undone.")
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button("Yes, discard", key="yes_discard_plan", type="primary"):
+                        api_delete(f"/meal-plans/{plan['id']}")
+                        st.session_state.plan_data = None
+                        st.session_state.plan_id = None
+                        st.session_state.pop("confirm_discard_plan", None)
+                        st.rerun()
+                with c2:
+                    if st.button("Cancel", key="no_discard_plan"):
+                        st.session_state.pop("confirm_discard_plan", None)
+                        st.rerun()
         else:
             if st.button("🔓 Reset & Edit Plan", use_container_width=True):
                 result = api_post(f"/meal-plans/{plan['id']}/unapprove")

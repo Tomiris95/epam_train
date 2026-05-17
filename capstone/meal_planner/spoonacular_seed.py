@@ -27,7 +27,7 @@ from backend import models
 BASE_URL = "https://api.spoonacular.com"
 
 
-def search_recipes(api_key: str, meal_type: str, offset: int = 0, number: int = 20, min_health_score: int = 0) -> dict:
+def search_recipes(api_key: str, meal_type: str, offset: int = 0, number: int = 20, min_health_score: int = 0, diet: str = "") -> dict:
     """Search for recipes by meal type."""
     url = f"{BASE_URL}/recipes/complexSearch"
     params = {
@@ -44,6 +44,8 @@ def search_recipes(api_key: str, meal_type: str, offset: int = 0, number: int = 
     }
     if min_health_score > 0:
         params["minHealthScore"] = min_health_score
+    if diet:
+        params["diet"] = diet
     r = requests.get(url, params=params, timeout=15)
     _check_quota(r)
     r.raise_for_status()
@@ -365,7 +367,7 @@ def map_meal_type(recipe: dict) -> str:
 
 # ─── Main seeder ─────────────────────────────────────────────────────────────
 
-def seed_from_spoonacular(api_key: str, target_count: int = 150, delay: float = 0.5, min_health_score: int = 0):
+def seed_from_spoonacular(api_key: str, target_count: int = 150, delay: float = 0.5, min_health_score: int = 0, diet: str = ""):
     """
     Fetch recipes from Spoonacular and seed the DB.
 
@@ -404,7 +406,7 @@ def seed_from_spoonacular(api_key: str, target_count: int = 150, delay: float = 
             print(f"  Fetching offset={offset}, batch={batch_size}...")
 
             try:
-                result = search_recipes(api_key, spoon_type, offset=offset, number=batch_size, min_health_score=min_health_score)
+                result = search_recipes(api_key, spoon_type, offset=offset, number=batch_size, min_health_score=min_health_score, diet=diet)
                 recipes_data = result.get("results", [])
 
                 if not recipes_data:
@@ -522,9 +524,12 @@ if __name__ == "__main__":
     parser.add_argument("--count", type=int, default=150, help="Total recipes to fetch (default 150)")
     parser.add_argument("--delay", type=float, default=0.5, help="Seconds between requests (default 0.5)")
     parser.add_argument("--min-health-score", type=int, default=0, help="Minimum Spoonacular health score 0-100 (default 0 = no filter). Use 60+ for healthy recipes.")
+    parser.add_argument("--diet", type=str, default="", help="Diet filter: vegetarian, vegan, gluten free, dairy free, etc.")
     args = parser.parse_args()
 
     print(f"🚀 Seeding DB from Spoonacular (target: {args.count} recipes)")
+    if args.diet:
+        print(f"   Diet filter: {args.diet}")
     print(f"   Free tier tip: stay under 100-120 recipes/day to avoid quota issues\n")
 
     seed_from_spoonacular(
@@ -532,4 +537,5 @@ if __name__ == "__main__":
         target_count=args.count,
         delay=args.delay,
         min_health_score=args.min_health_score,
+        diet=args.diet,
     )

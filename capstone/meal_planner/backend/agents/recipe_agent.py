@@ -53,6 +53,9 @@ class RecipeAgent:
         allowed     = preference_result.get("allowed_tags", [])
         exclude_ids = set(exclude_recipe_ids or [])
         query       = " ".join(filter(None, [meal_type, query_hint] + list(allowed)))
+        # Exclude stol5 EPUB recipes for users who haven't selected the stol5 diet.
+        # Spoonacular recipes never carry the stol5 tag, so they are unaffected.
+        _exclude_stol5 = "stol5" not in set(allowed)
 
         # ── Step 0: ingredient keyword search (runs first when preference given) ─
         # Catches cases like "eggs", "chicken", "salmon" that FAISS misses due to
@@ -83,6 +86,8 @@ class RecipeAgent:
                 )
                 if forbidden:
                     ing_hits = [r for r in ing_hits if not any(t.tag in forbidden for t in r.tags)]
+                if _exclude_stol5:
+                    ing_hits = [r for r in ing_hits if not any(t.tag == "stol5" for t in r.tags)]
                 if ing_hits:
                     logger.info("Ingredient search found %d results for keywords %s.", len(ing_hits), keywords)
                     return ing_hits[:10]
@@ -106,7 +111,7 @@ class RecipeAgent:
             filtered = [r for r in candidates if r.id not in exclude_ids]
             if filtered:
                 return filtered
-            # All MCP candidates were in exclude_ids — fall through to SQL fallback
+            # All MCP candidates excluded — fall through to SQL fallback
             logger.info("All MCP candidates excluded — falling back to SQL for %s.", meal_type)
 
         if "stol5" in allowed:
@@ -124,10 +129,10 @@ class RecipeAgent:
             .limit(50)
             .all()
         )
-        # Apply forbidden tag filter only — stol5 on recipes is a source label,
-        # not a dietary restriction, so stol5 EPUB recipes are valid for all users
         if forbidden:
             candidates = [r for r in candidates if not any(t.tag in forbidden for t in r.tags)]
+        if _exclude_stol5:
+            candidates = [r for r in candidates if not any(t.tag == "stol5" for t in r.tags)]
         return candidates[:10]
 
     async def _search_via_mcp(

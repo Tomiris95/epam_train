@@ -64,7 +64,7 @@ MCP_SERVER_URL=http://127.0.0.1:8001/sse
 
 ## Seed the Database
 
-### Required — EPUB recipes (Стол №5, Russian, ~124 recipes)
+### Required — EPUB recipes (Стол №5, Russian, 124 recipes)
 
 ```bash
 python backend/seed_from_epub.py
