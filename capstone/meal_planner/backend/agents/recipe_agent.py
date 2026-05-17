@@ -53,9 +53,10 @@ class RecipeAgent:
         allowed     = preference_result.get("allowed_tags", [])
         exclude_ids = set(exclude_recipe_ids or [])
         query       = " ".join(filter(None, [meal_type, query_hint] + list(allowed)))
-        # Exclude stol5 EPUB recipes for users who haven't selected the stol5 diet.
-        # Spoonacular recipes never carry the stol5 tag, so they are unaffected.
-        _exclude_stol5 = "stol5" not in set(allowed)
+        # stol5 is a behavioral tag (controls Spoonacular routing), not a content tag.
+        # filter_tags drives recipe content matching on all non-MCP paths.
+        _BEHAVIORAL = {"stol5"}
+        filter_tags = set(allowed) - _BEHAVIORAL
 
         # ── Step 0: ingredient keyword search (runs first when preference given) ─
         # Catches cases like "eggs", "chicken", "salmon" that FAISS misses due to
@@ -86,8 +87,8 @@ class RecipeAgent:
                 )
                 if forbidden:
                     ing_hits = [r for r in ing_hits if not any(t.tag in forbidden for t in r.tags)]
-                if _exclude_stol5:
-                    ing_hits = [r for r in ing_hits if not any(t.tag == "stol5" for t in r.tags)]
+                if filter_tags:
+                    ing_hits = [r for r in ing_hits if filter_tags.issubset({t.tag for t in r.tags})]
                 if ing_hits:
                     logger.info("Ingredient search found %d results for keywords %s.", len(ing_hits), keywords)
                     return ing_hits[:10]
@@ -114,25 +115,18 @@ class RecipeAgent:
             # All MCP candidates excluded — fall through to SQL fallback
             logger.info("All MCP candidates excluded — falling back to SQL for %s.", meal_type)
 
-        if "stol5" in allowed:
-            # stol5 blocks Spoonacular (online) only — local SQL is fine
-            logger.info("stol5 mode: Spoonacular skipped, using local SQL fallback for %s.", meal_type)
-
         logger.warning("No usable MCP results — local SQL fallback for %s.", meal_type)
-        candidates = (
-            db.query(Recipe)
-            .filter(
-                Recipe.meal_type == meal_type,
-                ~Recipe.id.in_(exclude_ids),
-            )
-            .order_by(func.random())
-            .limit(50)
-            .all()
+        sql_q = db.query(Recipe).filter(
+            Recipe.meal_type == meal_type,
+            ~Recipe.id.in_(exclude_ids),
         )
+        if "stol5" in allowed:
+            sql_q = sql_q.filter(Recipe.source == "local")
+        candidates = sql_q.order_by(func.random()).limit(50).all()
         if forbidden:
             candidates = [r for r in candidates if not any(t.tag in forbidden for t in r.tags)]
-        if _exclude_stol5:
-            candidates = [r for r in candidates if not any(t.tag == "stol5" for t in r.tags)]
+        if filter_tags:
+            candidates = [r for r in candidates if filter_tags.issubset({t.tag for t in r.tags})]
         return candidates[:10]
 
     async def _search_via_mcp(

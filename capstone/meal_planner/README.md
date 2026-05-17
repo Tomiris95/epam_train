@@ -161,6 +161,7 @@ meal_planner/
 ├── logs/
 │   └── app.log                       # Rotating log — auto-created, git-ignored
 ├── rag_eval.py                       # RAG precision/recall evaluation
+├── tag_epub_recipes.py               # Enrich EPUB recipes with dietary content tags
 ├── clear_spoonacular.py              # Remove Spoonacular recipes before re-seeding
 ├── spoonacular_seed.py               # Seed from Spoonacular API
 ├── BLUEPRINT.md                   # Full system architecture blueprint
@@ -218,6 +219,12 @@ meal_planner/
 # Evaluate RAG retrieval quality (precision / recall / F1)
 python rag_eval.py
 python rag_eval.py --top-k 15 --meal-type dinner
+
+# Enrich EPUB recipes with dietary content tags (run once after seeding)
+python tag_epub_recipes.py
+
+# Seed Spoonacular with a specific diet filter (e.g. vegetarian)
+python spoonacular_seed.py --api-key YOUR_KEY --count 15 --diet vegetarian
 
 # Delete stale Spoonacular recipes before re-seeding
 python clear_spoonacular.py

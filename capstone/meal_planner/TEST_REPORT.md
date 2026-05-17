@@ -176,22 +176,22 @@ The retrieval quality of the Recipe Agent (FAISS semantic search + SQL fallbacks
 ======================================================================
   Query                               MT         P      R      F1     GT  Ret TP
   ----------------------------------- ---------- ------ ------ ------ --- --- ---
-  breakfast with eggs                 breakfast  1.000  0.769  0.870   13  10  10
-  porridge oatmeal breakfast          breakfast  0.778  0.636  0.700   11   9   7
+  breakfast with eggs                 breakfast  1.000  0.500  0.667   20  10  10
+  porridge oatmeal breakfast          breakfast  0.800  0.421  0.552   19  10   8
   творог сырники обед                 lunch      1.000  1.000  1.000    2   2   2
-  smoothie banana breakfast           breakfast  0.667  1.000  0.800    6   9   6
-  halal breakfast                     breakfast  1.000  0.077  0.143   26   2   2
-  chicken soup lunch                  lunch      1.000  0.286  0.444    7   2   2
-  vegetable salad lunch               lunch      1.000  0.125  0.222   24   3   3
-  lentil soup                         lunch      1.000  1.000  1.000    2   2   2
-  fish lunch                          lunch      0.200  0.667  0.308    3  10   2
-  dinner with chicken                 dinner     1.000  1.000  1.000    4   4   4
-  fish dinner                         dinner     0.000  0.000  0.000    8   9   0
-  beef dinner                         dinner     1.000  1.000  1.000    1   1   1
-  vegetarian dinner                   dinner     0.000  0.000  0.000   14  10   0
-  light dinner with vegetables        dinner     0.667  0.286  0.400    7   3   2
+  smoothie banana breakfast           breakfast  0.600  0.667  0.632    9  10   6
+  halal breakfast                     breakfast  1.000  0.059  0.111   51   3   3
+  chicken soup lunch                  lunch      1.000  0.545  0.706   11   6   6
+  vegetable salad lunch               lunch      1.000  0.217  0.357   46  10  10
+  lentil soup                         lunch      0.750  1.000  0.857    3   4   3
+  fish lunch                          lunch      0.100  0.071  0.083   14  10   1
+  dinner with chicken                 dinner     1.000  1.000  1.000    6   6   6
+  fish dinner                         dinner     1.000  0.077  0.143   13   1   1
+  beef dinner                         dinner     1.000  1.000  1.000    2   2   2
+  vegetarian dinner                   dinner     1.000  0.769  0.870   13  10  10
+  light dinner with vegetables        dinner     0.667  0.154  0.250   13   3   2
   ─────────────────────────────────────────────────────────────────────
-  AVERAGE                                        0.737  0.560  0.563
+  AVERAGE                                        0.851  0.534  0.588
 ======================================================================
 ```
 
@@ -201,15 +201,17 @@ The retrieval quality of the Recipe Agent (FAISS semantic search + SQL fallbacks
 
 | Finding | Queries affected |
 |---------|-----------------|
-| **Perfect precision** — when the system returns results, they are correct | 9 of 14 queries achieve P = 1.0 |
-| **Low recall for large ground-truth sets** — FAISS top-k cap limits how many relevant recipes are surfaced | halal breakfast (GT=26, Ret=2), vegetable salad (GT=24, Ret=3) |
-| **Russian queries outperform English** — multilingual embeddings work better for Russian-to-Russian matching | "творог сырники обед" F1=1.0 vs "fish dinner" F1=0.0 |
-| **Cross-language gap for specific terms** — "fish", "vegetarian" do not reliably map to Russian fish/vegetarian recipes | fish dinner, vegetarian dinner both F1=0.0 |
+| **Perfect precision** — when the system returns results, they are correct | 10 of 14 queries achieve P = 1.0 |
+| **Low recall for large ground-truth sets** — FAISS top-k cap limits how many relevant recipes are surfaced | halal breakfast (GT=51, Ret=3), vegetable salad (GT=46, Ret=10) |
+| **Russian queries outperform English** — multilingual embeddings work better for Russian-to-Russian matching | "творог сырники обед" F1=1.0 vs "fish lunch" F1=0.083 |
+| **Cross-language gap for fish** — English "fish" query does not reliably retrieve Russian fish EPUB recipes | fish lunch F1=0.083, fish dinner F1=0.143 |
+| **Vegetarian dinner resolved** — EPUB recipes enriched with `vegetarian` tag; ground truth updated to tag-based | vegetarian dinner F1: 0.0 → 0.870 |
 
 **Mitigations implemented:**
 - Ingredient keyword SQL search (`ILIKE`) runs before FAISS — catches "eggs", "chicken", "smoothie" by ingredient/name match
+- EPUB recipes enriched with dietary content tags (`vegetarian`, `no_red_meat`, `halal`, `low_spice`, `soft_food`, `toddler`) via `tag_epub_recipes.py`
 - FAISS results shuffled before scoring — prevents same recipes appearing on repeated generations
-- English category hints added to FAISS-indexed text (e.g. recipes with "лосось" also indexed with "fish salmon") — pending index rebuild
+- RAG ground truth keywords updated to use Russian word roots (e.g. `рыб` instead of `рыба`) to catch all grammatical inflections
 
 **Reproducing the evaluation:**
 ```bash

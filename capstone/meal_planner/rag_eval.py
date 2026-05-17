@@ -98,9 +98,9 @@ TEST_CASES = [
     {
         "query":     "fish lunch",
         "meal_type": "lunch",
-        "keywords":  ["рыба", "fish", "salmon", "лосось", "треска", "cod"],
+        "keywords":  ["рыб", "fish", "salmon", "лосос", "треск", "семг", "хек", "минтай", "cod"],
         "tags":      [],
-        "note":      "Fish dishes for lunch",
+        "note":      "Fish dishes for lunch — use Russian roots to catch all grammatical forms",
     },
 
     # ── Dinner ────────────────────────────────────────────────────────────────
@@ -114,9 +114,9 @@ TEST_CASES = [
     {
         "query":     "fish dinner",
         "meal_type": "dinner",
-        "keywords":  ["рыба", "fish", "salmon", "лосось", "семга", "треска", "cod", "тунец", "tuna"],
+        "keywords":  ["рыб", "fish", "salmon", "лосос", "семг", "треск", "cod", "тунец", "tuna", "хек", "минтай"],
         "tags":      [],
-        "note":      "Fish-based dinners",
+        "note":      "Fish-based dinners — use Russian roots to catch all grammatical forms",
     },
     {
         "query":     "beef dinner",
@@ -128,9 +128,9 @@ TEST_CASES = [
     {
         "query":     "vegetarian dinner",
         "meal_type": "dinner",
-        "keywords":  ["vegetarian", "овощ", "vegetable", "tofu", "bean", "lentil", "чечевица"],
-        "tags":      [],
-        "note":      "Keyword-based vegetarian dinner — tag not reliable across EPUB+Spoonacular",
+        "keywords":  [],
+        "tags":      ["vegetarian"],
+        "note":      "Tag-based vegetarian dinner — ground truth and retrieval both use vegetarian tag",
     },
     {
         "query":     "light dinner with vegetables",

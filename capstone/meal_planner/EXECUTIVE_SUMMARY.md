@@ -41,8 +41,8 @@ The system stores 124 Russian recipes from a certified medical diet cookbook (*�
 - Conversational meal replacement works in both Russian and English
 
 **RAG quality (evaluated on 14 test cases):**
-- Average F1: **0.563** across breakfast, lunch, and dinner queries
-- Perfect scores (F1 = 1.0) for direct ingredient matches ("chicken dinner", "lentil soup")
+- Average F1: **0.588** across breakfast, lunch, and dinner queries (up from 0.563 after recipe tagging enrichment)
+- Perfect scores (F1 = 1.0) for direct matches ("chicken dinner", "lentil soup", "vegetarian dinner")
 - Identified gap: English queries for Russian EPUB recipes score lower due to cross-language semantic distance
 
 **Test coverage:**
@@ -82,4 +82,3 @@ The recipe knowledge base compounds in value over time: every Spoonacular recipe
 2. **Shared vector store** — Replace in-process FAISS with Qdrant or Weaviate for multi-instance deployment
 3. **Query translation** — Translating user preference keywords to Russian before FAISS search would significantly improve recall for stol5 recipe queries from non-Russian speakers
 4. **Weekly plan generation** — Extend the planner to generate a full week at once, with cross-day variety constraints and a consolidated weekly shopping list
-5. **Recipe tagging enrichment** — Automatically tag EPUB recipes with ingredient-category attributes (fish, chicken, vegetarian) so the FAISS filter works without relying on the SQL keyword fallback

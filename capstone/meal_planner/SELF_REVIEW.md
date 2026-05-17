@@ -144,3 +144,4 @@ Use a mature auth library (e.g. `fastapi-users`) that handles token refresh, ema
 | Auth | Custom JWT + bcrypt | `fastapi-users` |
 | Scalability | Single instance | Stateless replicas + shared store |
 | RAG evaluation | SQL-derived ground truth | Human-labelled benchmark dataset |
+| EPUB dietary tagging | Rule-based ingredient keyword matching | LLM-based ingredient analysis |

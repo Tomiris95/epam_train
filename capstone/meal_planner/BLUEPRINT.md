@@ -380,7 +380,7 @@ Seven fallback layers ensure the system remains functional under partial failure
 
 | Source | Count | Language | Macros | Tags |
 |--------|-------|----------|--------|------|
-| EPUB — "Стол №5" medical diet cookbook | 124 recipes | Russian | Parsed from book nutrition tables (Белки/Жиры/Углеводы) | `stol5`, `lunch`, `dinner`, `breakfast` |
+| EPUB — "Стол №5" medical diet cookbook | 124 recipes | Russian | Parsed from book nutrition tables (Белки/Жиры/Углеводы) | `stol5`, `lunch`, `dinner`, `breakfast` + enriched: `vegetarian`, `no_red_meat`, `halal`, `low_spice`, `soft_food`, `toddler` |
 | Spoonacular API | 152 recipes | English | From API nutrition data | Extracted: `vegan`, `vegetarian`, `gluten_free`, `dairy_free`, `halal`, `high_protein`, etc. |
 
 **Embedding model:** `paraphrase-multilingual-MiniLM-L12-v2` — chosen over English-only `all-MiniLM-L6-v2` because the recipe corpus is bilingual (Russian EPUB + English Spoonacular).

@@ -73,11 +73,12 @@ def search_local_recipes(
         if not candidate_ids:
             candidate_ids = [r.id for r in db.query(models.Recipe).all()]
 
-        candidates = (
-            db.query(models.Recipe)
-            .filter(models.Recipe.id.in_(candidate_ids))
-            .all()
-        )
+        stol5_only = "stol5" in allowed_tags
+
+        candidate_q = db.query(models.Recipe).filter(models.Recipe.id.in_(candidate_ids))
+        if stol5_only:
+            candidate_q = candidate_q.filter(models.Recipe.source == "local")
+        candidates = candidate_q.all()
 
         results = []
         for recipe in candidates:
@@ -90,17 +91,17 @@ def search_local_recipes(
                 continue
             results.append(recipe.id)
 
-        # FAISS top-k may not contain any recipes of the requested meal_type
-        # (e.g. top-20 semantic matches are all breakfast/lunch).
-        # Fall back to querying all local recipes of that meal_type directly.
+        # FAISS top-k may not contain any recipes of the requested meal_type.
+        # Fall back to querying all recipes of that meal_type directly.
         if not results:
             logger.info(
                 "FAISS top-%d had no '%s' recipes — querying all local %s recipes.",
                 top_k, meal_type, meal_type,
             )
-            fallback = db.query(models.Recipe).filter(
-                models.Recipe.meal_type == meal_type
-            ).all()
+            fallback_q = db.query(models.Recipe).filter(models.Recipe.meal_type == meal_type)
+            if stol5_only:
+                fallback_q = fallback_q.filter(models.Recipe.source == "local")
+            fallback = fallback_q.all()
             random.shuffle(fallback)
             for recipe in fallback:
                 recipe_tags = {t.tag for t in recipe.tags}
