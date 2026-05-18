@@ -110,6 +110,8 @@ class RecipeAgent:
         if recipe_ids:
             candidates = db.query(Recipe).filter(Recipe.id.in_(recipe_ids)).all()
             filtered = [r for r in candidates if r.id not in exclude_ids]
+            if filter_tags:
+                filtered = [r for r in filtered if filter_tags.issubset({t.tag for t in r.tags})]
             if filtered:
                 return filtered
             # All MCP candidates excluded — fall through to SQL fallback

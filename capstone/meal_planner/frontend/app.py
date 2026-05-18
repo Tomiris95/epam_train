@@ -270,7 +270,13 @@ with st.sidebar:
     if families:
         family_names = {f["name"]: f["id"] for f in families}
         selected_name = st.selectbox("Active Family", list(family_names.keys()))
-        st.session_state.family_id = family_names[selected_name]
+        new_family_id = family_names[selected_name]
+        if new_family_id != st.session_state.family_id:
+            st.session_state.plan_data = None
+            st.session_state.plan_id = None
+            st.session_state.shopping_list = None
+            st.session_state.chat_history = []
+        st.session_state.family_id = new_family_id
         st.caption(f"Family ID: {st.session_state.family_id}")
     else:
         st.info("No families yet — create one in Setup!")
@@ -656,7 +662,7 @@ elif page == "📅 Generate Plan":
                 <div class="recipe-name">{recipe['name']}</div>
                 <div class="meta">
                     📊 {cal:.1f} kcal/base portion &nbsp;|&nbsp;
-                    ⚖️ {recipe['base_portion_grams']}g base &nbsp;|&nbsp;
+                    ⚖️ {round(recipe['base_portion_grams'])}g base &nbsp;|&nbsp;
                     🔥 {recipe['calories_per_100g']} kcal/100g
                 </div>
                 <div class="meta">🥩 {protein}g protein &nbsp;|&nbsp; 🧈 {fat}g fat &nbsp;|&nbsp; 🍞 {carbs}g carbs</div>

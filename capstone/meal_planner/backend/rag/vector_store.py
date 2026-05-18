@@ -197,6 +197,18 @@ def _try_load(expected_count: int) -> bool:
     if len(meta.get("ids", [])) != expected_count:
         return False
 
+    # Also rebuild if recipe texts changed (e.g. tags were added to existing recipes)
+    if meta.get("ids") and meta.get("texts"):
+        from backend.database import SessionLocal
+        from backend.models import Recipe as _Recipe
+        _db = SessionLocal()
+        try:
+            sample = _db.query(_Recipe).filter(_Recipe.id == meta["ids"][0]).first()
+            if sample and recipe_to_text(sample) != meta["texts"][0]:
+                return False
+        finally:
+            _db.close()
+
     _recipe_ids = meta["ids"]
     _recipe_texts = meta["texts"]
 
